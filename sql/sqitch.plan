@@ -2,3 +2,5 @@
 %project=holiplan
 %uri=https://github.com/sekunho/holiplan
 
+extensions 2022-05-16T05:30:11Z sekun <sekun@ichi> # Add necessary PG extensions
+holiday_plans 2022-05-16T05:33:07Z sekun <sekun@ichi> # Add holiday plans
