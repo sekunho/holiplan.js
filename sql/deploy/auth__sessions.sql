@@ -3,25 +3,18 @@
 BEGIN;
   SET LOCAL ROLE hp_auth;
 
-  -- This just checks if the credentials are valid. Since the authentication is
-  -- handled by JWT, and I can't be arsed to implement the sessions aspect for
-  -- logging out, I will just deal with JWT's massive design flaw for user
-  -- sessions. I don't understand why people still continue to use this when
-  -- it's really, really annoying considering all of its zero day incidents.
-  CREATE FUNCTION auth.do_credentials_match(username CITEXT, password TEXT)
-    RETURNS BOOLEAN
+  CREATE FUNCTION auth.login(username CITEXT, password TEXT)
+    RETURNS JSONB
     LANGUAGE SQL
     SECURITY DEFINER
     AS $$
-      SELECT exists(
-        SELECT *
-          FROM app.users
-          WHERE username = do_credentials_match.username
-            AND password = crypt(do_credentials_match.password, password)
-      );
+      SELECT json_build_object('user_id', users.user_id)
+        FROM app.users
+        WHERE username = login.username
+          AND password = crypt(login.password, password)
     $$;
 
-  GRANT EXECUTE ON FUNCTION auth.do_credentials_match TO hp_anon, hp_api;
+  GRANT EXECUTE ON FUNCTION auth.login TO hp_anon, hp_api;
 
   CREATE OR REPLACE FUNCTION auth.authenticate()
     RETURNS VOID
