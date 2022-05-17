@@ -4,9 +4,9 @@ let cookieParser = require('cookie-parser');
 let logger = require('morgan');
 const { Pool } = require('pg');
 
-let indexRouter = require('./routes/index');
-let usersRouter = require('./routes/users');
-let plansRouter = require('./routes/plans');
+let indexRouter = require('./holiplan_web/routes/index');
+let usersRouter = require('./holiplan_web/routes/users');
+let plansRouter = require('./holiplan_web/routes/plans');
 let app = express();
 const pool = new Pool();
 
@@ -21,6 +21,6 @@ app.use('/api/index', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/plans', plansRouter);
 // TODO
-app.use('/api/tags', plansRouter);
+app.use('/api', usersRouter);
 
 module.exports = app;

@@ -1,14 +1,15 @@
 var express = require('express');
 var router = express.Router();
-let plan = require('../plan');
+let plan = require('../../holiplan/plan');
 
 // Index plans
 router.get('/', async function(req, res, next) {
   const pool = req.app.get('db');
-  const json = await plan.list_plans(pool, '1');
+  const json = await plan.list_plans(pool, req.cookies.token);
 
-  res.status(json.code);
-  res.send(JSON.stringify(json.payload));
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // Get plan details

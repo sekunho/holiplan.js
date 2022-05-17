@@ -92,6 +92,12 @@ BEGIN;
     TO hp_auth
     USING (true);
 
+  CREATE POLICY api_reads_user_id
+    ON app.users
+    FOR SELECT
+    TO hp_api
+    USING (true);
+
   -- `hp_api` has permissions to register users.
   CREATE POLICY api_register_users
     ON app.users
