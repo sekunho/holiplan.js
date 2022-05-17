@@ -10,7 +10,9 @@ BEGIN;
   REVOKE EXECUTE ON FUNCTION api.create_event FROM hp_user;
   REVOKE EXECUTE ON FUNCTION api.edit_event FROM hp_user;
   REVOKE EXECUTE ON FUNCTION api.delete_event FROM hp_user;
+  REVOKE EXECUTE ON FUNCTION api.create_comment FROM hp_user;
 
+  DROP FUNCTION api.create_comment;
   DROP FUNCTION api.delete_event;
   DROP FUNCTION api.edit_event;
   DROP FUNCTION api.create_event;
