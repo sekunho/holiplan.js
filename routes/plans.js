@@ -1,9 +1,14 @@
 var express = require('express');
 var router = express.Router();
+let plan = require('../plan');
 
 // Index plans
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/', async function(req, res, next) {
+  const pool = req.app.get('db');
+  const json = await plan.list_plans(pool, '1');
+
+  res.status(json.code);
+  res.send(JSON.stringify(json.payload));
 });
 
 // Get plan details
