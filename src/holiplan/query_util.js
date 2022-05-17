@@ -6,7 +6,7 @@ query_util = {
           code: 401,
           payload: {
             error_code: 'E001',
-            message: 'E001: You are not authorized to access this resource.'
+            message: 'E001: You are not authorized to perform said action on this resource.'
           }
         };
       default:

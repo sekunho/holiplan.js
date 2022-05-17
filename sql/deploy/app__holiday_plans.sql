@@ -11,6 +11,8 @@ BEGIN;
     date        DATE NOT NULL
   );
 
+  CREATE INDEX plan_user_index ON app.plans(user_id);
+
   ALTER TABLE app.plans ENABLE ROW LEVEL SECURITY;
 
   CREATE TABLE app.events(
@@ -35,8 +37,21 @@ BEGIN;
   );
 
   CREATE INDEX event_plan_index ON app.events(plan_id);
+  CREATE INDEX event_user_index ON app.events(user_id);
 
   ALTER TABLE app.events ENABLE ROW LEVEL SECURITY;
+
+  CREATE TABLE app.comments(
+    comment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id    UUID REFERENCES app.plans,
+    user_id    BIGINT REFERENCES app.users,
+    content    TEXT NOT NULL
+  );
+
+  CREATE INDEX comment_plan_index ON app.comments(plan_id);
+  CREATE INDEX comment_user_index ON app.comments(user_id);
+
+  ALTER TABLE app.comments ENABLE ROW LEVEL SECURITY;
 
   ------------------------------------------------------------------------------
   -- Permissions
@@ -44,8 +59,7 @@ BEGIN;
   GRANT
       SELECT,
       INSERT,
-      UPDATE,
-      DELETE
+      UPDATE, DELETE
     ON TABLE app.plans
     TO hp_user;
 
@@ -68,5 +82,33 @@ BEGIN;
     FOR ALL
     USING (user_id = app.current_user_id())
     WITH CHECK (user_id = app.current_user_id());
+
+  GRANT
+      SELECT,
+      INSERT,
+      UPDATE, DELETE
+    ON TABLE app.comments
+    TO hp_user;
+
+  CREATE POLICY user_comment_policy
+    ON app.comments
+    FOR ALL
+    USING (
+      user_id = app.current_user_id() AND
+      plan_id IN (
+        SELECT plan_id
+          FROM app.plans
+          WHERE user_id = app.current_user_id()
+      )
+    )
+    WITH CHECK
+      (
+        user_id = app.current_user_id() AND
+        plan_id IN (
+          SELECT plan_id
+            FROM app.plans
+            WHERE user_id = app.current_user_id()
+        )
+      );
 
 COMMIT;

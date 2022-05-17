@@ -52,10 +52,18 @@ BEGIN;
                   FILTER (WHERE event_id IS NOT NULL)
               , '[]'::JSONB
               )
+          , 'comments'
+          , coalesce
+              ( jsonb_agg(row_to_json(comments))
+                  FILTER (WHERE comment_id IS NOT NULL)
+              , '[]'::JSONB
+              )
           )
         FROM app.plans
         LEFT JOIN app.events
         ON plans.plan_id = events.plan_id
+        LEFT JOIN app.comments
+        ON plans.plan_id = comments.plan_id
         WHERE plans.plan_id = in_plan_id
         GROUP BY plans.name, plans.description;
     $$;
@@ -115,7 +123,7 @@ BEGIN;
 
   GRANT EXECUTE ON FUNCTION api.delete_plan TO hp_user;
 
-  --------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------
   -- Event-related functions
   CREATE OR REPLACE FUNCTION api.create_event
     ( in_plan_id UUID
@@ -201,5 +209,33 @@ BEGIN;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.delete_event TO hp_user;
+
+  ------------------------------------------------------------------------------
+
+  CREATE OR REPLACE FUNCTION api.create_comment(plan_id UUID, content TEXT)
+    RETURNS JSONB
+    LANGUAGE SQL
+    AS $$
+      INSERT
+        INTO app.comments (plan_id, user_id, content)
+        VALUES
+          ( create_comment.plan_id
+          , app.current_user_id()
+          , create_comment.content
+          )
+        RETURNING
+          json_build_object
+            ( 'id'
+            , comment_id
+            , 'content'
+            , content
+            , 'user_id'
+            , user_id
+            , 'plan_id'
+            , plan_id
+            );
+    $$;
+
+  GRANT EXECUTE ON FUNCTION api.create_comment TO hp_user;
 
 COMMIT;
