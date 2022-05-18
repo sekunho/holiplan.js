@@ -42,7 +42,15 @@ BEGIN;
       DECLARE
         result JSONB;
       BEGIN
-        -- TODO: Fix duplicate events
+        WITH events_cte AS (
+          SELECT jsonb_agg(events) AS events
+            FROM app.events
+            WHERE events.plan_id = in_plan_id
+        ), comments_cte AS (
+          SELECT jsonb_agg(comments) AS comments
+            FROM app.comments
+            WHERE comments.plan_id = in_plan_id
+        )
         SELECT
           json_build_object
             ( 'name'
@@ -52,27 +60,19 @@ BEGIN;
             , 'id'
             , plans.plan_id
             , 'events'
-            , coalesce
-                ( jsonb_agg(row_to_json(events)
-                    ORDER BY events.start_date ASC)
-                    FILTER (WHERE event_id IS NOT NULL)
-                , '[]'::JSONB
-                )
+            , events_cte.events
             , 'comments'
-            , coalesce
-                ( jsonb_agg(row_to_json(comments))
-                    FILTER (WHERE comment_id IS NOT NULL)
-                , '[]'::JSONB
-                )
+            , comments_cte.comments
             )
           INTO result
-          FROM app.plans
-          LEFT JOIN app.events
-          ON plans.plan_id = events.plan_id
-          LEFT JOIN app.comments
-          ON plans.plan_id = comments.plan_id
+          FROM app.plans, events_cte, comments_cte
           WHERE plans.plan_id = in_plan_id
-          GROUP BY plans.plan_id, plans.name, plans.description;
+          GROUP BY
+            plans.plan_id
+          , plans.name
+          , plans.description
+          , events_cte.events
+          , comments_cte.comments;
 
         IF result IS NULL THEN
           RAISE
