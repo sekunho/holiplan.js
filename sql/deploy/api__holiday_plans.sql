@@ -37,37 +37,50 @@ BEGIN;
 
   CREATE OR REPLACE FUNCTION api.get_plan_details(in_plan_id UUID)
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      SELECT
-        json_build_object
-          ( 'name'
-          , plans.name
-          , 'description'
-          , plans.description
-          , 'id'
-          , plans.plan_id
-          , 'events'
-          , coalesce
-              ( jsonb_agg(row_to_json(events)
-                  ORDER BY events.start_date ASC)
-                  FILTER (WHERE event_id IS NOT NULL)
-              , '[]'::JSONB
-              )
-          , 'comments'
-          , coalesce
-              ( jsonb_agg(row_to_json(comments))
-                  FILTER (WHERE comment_id IS NOT NULL)
-              , '[]'::JSONB
-              )
-          )
-        FROM app.plans
-        LEFT JOIN app.events
-        ON plans.plan_id = events.plan_id
-        LEFT JOIN app.comments
-        ON plans.plan_id = comments.plan_id
-        WHERE plans.plan_id = in_plan_id
-        GROUP BY plans.plan_id, plans.name, plans.description;
+      DECLARE
+        result JSONB;
+      BEGIN
+        SELECT
+          json_build_object
+            ( 'name'
+            , plans.name
+            , 'description'
+            , plans.description
+            , 'id'
+            , plans.plan_id
+            , 'events'
+            , coalesce
+                ( jsonb_agg(row_to_json(events)
+                    ORDER BY events.start_date ASC)
+                    FILTER (WHERE event_id IS NOT NULL)
+                , '[]'::JSONB
+                )
+            , 'comments'
+            , coalesce
+                ( jsonb_agg(row_to_json(comments))
+                    FILTER (WHERE comment_id IS NOT NULL)
+                , '[]'::JSONB
+                )
+            )
+          INTO result
+          FROM app.plans
+          LEFT JOIN app.events
+          ON plans.plan_id = events.plan_id
+          LEFT JOIN app.comments
+          ON plans.plan_id = comments.plan_id
+          WHERE plans.plan_id = in_plan_id
+          GROUP BY plans.plan_id, plans.name, plans.description;
+
+        IF result IS NULL THEN
+          RAISE
+            'Resource does not exist: %',
+            in_plan_id USING ERRCODE = 'no_data_found';
+        END IF;
+
+        RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.get_plan_details TO hp_user;
@@ -95,23 +108,36 @@ BEGIN;
     , in_description TEXT
     )
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      UPDATE app.plans
-        SET name = in_name
-          , description = in_description
-        WHERE plans.plan_id = in_plan_id
-        RETURNING
-          json_build_object
-            ( 'id'
-            , plan_id
-            , 'name'
-            , name
-            , 'description'
-            , description
-            , 'date'
-            , date
-            );
+      DECLARE
+        result JSONB;
+      BEGIN
+        UPDATE app.plans
+          SET name = in_name
+            , description = in_description
+          WHERE plans.plan_id = in_plan_id
+          RETURNING
+            json_build_object
+              ( 'id'
+              , plan_id
+              , 'name'
+              , name
+              , 'description'
+              , description
+              , 'date'
+              , date
+              )
+          INTO result;
+
+          IF result IS NULL THEN
+            RAISE
+              'Resource does not exist: %',
+              in_plan_id USING ERRCODE = 'no_data_found';
+          END IF;
+
+          RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.edit_plan TO hp_user;
@@ -140,7 +166,7 @@ BEGIN;
 
         IF result IS NULL THEN
           RAISE
-            'Row does not exist and cannot be deleted: %',
+            'Resource does not exist and cannot be deleted: %',
             in_plan_id USING ERRCODE = 'no_data_found';
         END IF;
 

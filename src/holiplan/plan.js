@@ -25,17 +25,7 @@ plan = {
         [plan_id]
       );
 
-      if (res.rows[0].get_plan_details) {
-        return {code: 200, payload: res.rows[0].get_plan_details};
-      } else {
-        return {
-          code: 404,
-          payload: {
-            error_code: 'E004',
-            message: 'E004: Resource not found'
-          }
-        }
-      }
+      return {code: 200, payload: res.rows[0].get_plan_details};
     } catch (e) {
       return parse_error(e);
     }
@@ -63,17 +53,7 @@ plan = {
         [plan.plan_id, plan.name, plan.description]
       );
 
-      if (res.rows[0].edit_plan) {
-        return {code: 200, payload: res.rows[0].edit_plan};
-      } else {
-        return {
-          code: 404,
-          payload: {
-            error_code: 'E005',
-            message: 'E005: Plan does not exist'
-          }
-        };
-      }
+      return {code: 200, payload: res.rows[0].edit_plan};
     } catch (e) {
       return parse_error(e);
     }
