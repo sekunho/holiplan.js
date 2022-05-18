@@ -16,7 +16,6 @@
           nodePackages.typescript
           nodePackages.typescript-language-server
 
-
           # Database
           sqitchPg
           perl534Packages.TAPParserSourceHandlerpgTAP
