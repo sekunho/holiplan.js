@@ -40,6 +40,20 @@ plan = {
       return parse_error(e);
     }
   },
+  create_plan: async (pool, user_id, plan) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.create_plan($1, $2, $3)',
+        [plan.name, plan.description, plan.date]
+      );
+
+      return {code: 201, payload: res.rows[0].create_plan};
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
   create_comment: async (pool, user_id, comment) => {
     try {
       const res = await db.authenticate_query(
