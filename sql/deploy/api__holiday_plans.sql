@@ -45,6 +45,8 @@ BEGIN;
           , plans.name
           , 'description'
           , plans.description
+          , 'id'
+          , plans.plan_id
           , 'events'
           , coalesce
               ( jsonb_agg(row_to_json(events)
@@ -65,7 +67,7 @@ BEGIN;
         LEFT JOIN app.comments
         ON plans.plan_id = comments.plan_id
         WHERE plans.plan_id = in_plan_id
-        GROUP BY plans.name, plans.description;
+        GROUP BY plans.plan_id, plans.name, plans.description;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.get_plan_details TO hp_user;
@@ -99,7 +101,17 @@ BEGIN;
         SET name = in_name
           , description = in_description
         WHERE plans.plan_id = in_plan_id
-        RETURNING api.get_plan_details(plan_id)
+        RETURNING
+          json_build_object
+            ( 'id'
+            , plan_id
+            , 'name'
+            , name
+            , 'description'
+            , description
+            , 'date'
+            , date
+            );
     $$;
 
   GRANT EXECUTE ON FUNCTION api.edit_plan TO hp_user;
