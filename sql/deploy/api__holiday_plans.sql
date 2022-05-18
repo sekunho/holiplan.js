@@ -118,19 +118,34 @@ BEGIN;
 
   CREATE OR REPLACE FUNCTION api.delete_plan(in_plan_id UUID)
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      DELETE
-        FROM app.plans
-        WHERE plans.plan_id = $1
-        RETURNING json_build_object
-          ( 'id'
-          , plan_id
-          , 'name'
-          , name
-          , 'description'
-          , description
-          )
+      DECLARE
+        result JSONB;
+      BEGIN
+        DELETE
+          FROM app.plans
+          WHERE plans.plan_id = $1
+          RETURNING json_build_object
+            ( 'id'
+            , plan_id
+            , 'name'
+            , name
+            , 'description'
+            , description
+            , 'date'
+            , date
+            )
+          INTO result;
+
+        IF result IS NULL THEN
+          RAISE
+            'Row does not exist and cannot be deleted: %',
+            in_plan_id USING ERRCODE = 'no_data_found';
+        END IF;
+
+        RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.delete_plan TO hp_user;

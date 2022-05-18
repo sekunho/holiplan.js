@@ -78,6 +78,20 @@ plan = {
       return parse_error(e);
     }
   },
+  delete_plan: async (pool, user_id, plan_id) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.delete_plan($1)',
+        [plan_id]
+      );
+
+      return {code: 200, payload: res.rows[0].delete_plan};
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
   create_comment: async (pool, user_id, comment) => {
     try {
       const res = await db.authenticate_query(

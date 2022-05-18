@@ -62,9 +62,18 @@ router.patch('/:plan_id', async function(req, res, next) {
 });
 
 // Delete plan
-router.delete('/:plan_id', function(req, res, next) {
-  console.log(req.params.plan_id);
-  res.send('respond with a resource');
+router.delete('/:plan_id', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.delete_plan(
+    pool,
+    req.current_user_id,
+    req.params.plan_id
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // EVENTS

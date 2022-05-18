@@ -9,6 +9,7 @@ query_util = {
             message: 'E001: You are not authorized to perform said action on this resource.'
           }
         };
+
       case '23502':
         return {
           code: 400,
@@ -17,6 +18,7 @@ query_util = {
             message: `E002: Column '${e.column}' cannot be null`
           }
         }
+
       case '22P02':
         return {
           code: 400,
@@ -25,6 +27,16 @@ query_util = {
             message: 'E003: Invalid data type'
           }
         }
+
+      case 'P0002':
+        return {
+          code: 404,
+          payload: {
+            error_code: 'E004',
+            message: 'E004: Resource does not exist'
+          }
+        }
+
       default:
         return {
           code: 500,
