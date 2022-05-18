@@ -54,6 +54,30 @@ plan = {
       return parse_error(e);
     }
   },
+  edit_plan: async (pool, user_id, plan) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.edit_plan($1, $2, $3)',
+        [plan.plan_id, plan.name, plan.description]
+      );
+
+      if (res.rows[0].edit_plan) {
+        return {code: 200, payload: res.rows[0].edit_plan};
+      } else {
+        return {
+          code: 404,
+          payload: {
+            error_code: 'E005',
+            message: 'E005: Plan does not exist'
+          }
+        };
+      }
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
   create_comment: async (pool, user_id, comment) => {
     try {
       const res = await db.authenticate_query(

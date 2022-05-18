@@ -43,9 +43,22 @@ router.post('/', async function(req, res, next) {
 });
 
 // Edit plan
-router.patch('/:plan_id', function(req, res, next) {
-  console.log(req.params.plan_id);
-  res.send('respond with a resource');
+router.patch('/:plan_id', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.edit_plan(
+    pool,
+    req.current_user_id,
+    {
+      plan_id: req.params.plan_id,
+      name: req.body.name,
+      description: req.body.description
+    }
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // Delete plan
