@@ -27,6 +27,21 @@ router.get('/:plan_id', async function(req, res, next) {
     .json(json.payload);
 });
 
+// Create a new plan
+router.post('/', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.create_plan(
+    pool,
+    req.current_user_id,
+    req.body
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
+});
+
 // Edit plan
 router.patch('/:plan_id', function(req, res, next) {
   console.log(req.params.plan_id);
