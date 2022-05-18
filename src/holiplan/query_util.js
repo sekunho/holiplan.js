@@ -9,12 +9,28 @@ query_util = {
             message: 'E001: You are not authorized to perform said action on this resource.'
           }
         };
+      case '23502':
+        return {
+          code: 400,
+          payload: {
+            error_code: 'E002',
+            message: `E002: Column '${e.column}' cannot be null`
+          }
+        }
+      case '22P02':
+        return {
+          code: 400,
+          payload: {
+            error_code: 'E003',
+            message: 'E003: Invalid data type'
+          }
+        }
       default:
         return {
           code: 500,
           payload: {
-            error_code: 'E002',
-            message: 'E002: Something terribly wrong has happened.'
+            error_code: 'E000',
+            message: 'E000: Something terribly wrong has happened.'
           }
         };
     }

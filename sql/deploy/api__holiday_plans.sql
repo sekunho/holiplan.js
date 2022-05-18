@@ -238,4 +238,48 @@ BEGIN;
 
   GRANT EXECUTE ON FUNCTION api.create_comment TO hp_user;
 
+  CREATE OR REPLACE FUNCTION api.edit_comment(comment_id UUID, content TEXT)
+    RETURNS JSONB
+    LANGUAGE SQL
+    AS $$
+      UPDATE app.comments
+        SET content = edit_comment.content
+        WHERE comment_id = edit_comment.comment_id
+        RETURNING
+          json_build_object
+            ( 'id'
+            , comment_id
+            , 'content'
+            , content
+            , 'user_id'
+            , user_id
+            , 'plan_id'
+            , plan_id
+            );
+    $$;
+
+  GRANT EXECUTE ON FUNCTION api.edit_comment TO hp_user;
+
+  CREATE OR REPLACE FUNCTION api.delete_comment(comment_id UUID)
+    RETURNS JSONB
+    LANGUAGE SQL
+    AS $$
+      DELETE
+        FROM app.comments
+        WHERE comment_id = delete_comment.comment_id
+        RETURNING
+          json_build_object
+            ( 'id'
+            , comment_id
+            , 'content'
+            , content
+            , 'user_id'
+            , user_id
+            , 'plan_id'
+            , plan_id
+            );
+    $$;
+
+  GRANT EXECUTE ON FUNCTION api.delete_comment TO hp_user;
+
 COMMIT;
