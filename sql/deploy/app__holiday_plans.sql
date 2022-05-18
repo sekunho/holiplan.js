@@ -80,8 +80,22 @@ BEGIN;
   CREATE POLICY user_event_policy
     ON app.events
     FOR ALL
-    USING (user_id = app.current_user_id())
-    WITH CHECK (user_id = app.current_user_id());
+    USING (
+      user_id = app.current_user_id() AND
+      plan_id IN (
+        SELECT plan_id
+          FROM app.plans
+          WHERE user_id = app.current_user_id()
+      )
+    )
+    WITH CHECK (
+      user_id = app.current_user_id() AND
+      plan_id IN (
+        SELECT plan_id
+          FROM app.plans
+          WHERE user_id = app.current_user_id()
+      )
+    );
 
   GRANT
       SELECT,

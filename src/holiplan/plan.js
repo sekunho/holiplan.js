@@ -113,7 +113,52 @@ plan = {
     } catch (e) {
       return parse_error(e);
     }
-  }
+  },
+  create_event: async (pool, user_id, event) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.create_event($1, $2, $3, $4)',
+        [event.plan_id, event.name, event.start_date, event.end_date]
+      );
+
+      console.log('Why is it here', res);
+
+      return {code: 200, payload: res.rows[0].create_event};
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
+  edit_event: async (pool, user_id, event) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.edit_event($1, $2, $3, $4)',
+        [event.event_id, event.name, event.start_date, event.end_date]
+      );
+
+      return {code: 200, payload: res.rows[0].edit_event};
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
+  delete_event: async (pool, user_id, event_id) => {
+    try {
+      const res = await db.authenticate_query(
+        pool,
+        user_id,
+        'SELECT * FROM api.delete_event($1)',
+        [event_id]
+      );
+
+      return {code: 200, payload: res.rows[0].delete_event};
+    } catch (e) {
+      return parse_error(e);
+    }
+  },
+
 };
 
 module.exports = plan;

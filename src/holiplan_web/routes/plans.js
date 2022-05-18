@@ -79,18 +79,58 @@ router.delete('/:plan_id', async function(req, res, next) {
 // EVENTS
 
 // Create plan event
-router.post('/:plan_id/events', function(req, res, next) {
-  res.send('respond with a resource');
+router.post('/:plan_id/events', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.create_event(
+    pool,
+    req.current_user_id,
+    {
+      plan_id: req.params.plan_id,
+      name: req.body.name,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date
+    }
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // Edit a plan event
-router.patch('/:plan_id/events/:event_id', function(req, res, next) {
-  res.send('respond with a resource');
+router.patch('/events/:event_id', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.edit_event(
+    pool,
+    req.current_user_id,
+    {
+      event_id: req.params.event_id,
+      name: req.body.name,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date
+    }
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // Delete plan event
-router.delete('/:plan_id/events/:event_id', function(req, res, next) {
-  res.send('respond with a resource');
+router.delete('/events/:event_id', async function(req, res, next) {
+  const pool = req.app.get('db');
+
+  const json = await plan.delete_event(
+    pool,
+    req.current_user_id,
+    req.params.event_id
+  );
+
+  res
+    .status(json.code)
+    .json(json.payload);
 });
 
 // COMMENTS

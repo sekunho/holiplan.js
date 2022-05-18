@@ -1,5 +1,6 @@
 query_util = {
   parse_error: (e) => {
+    console.log(e);
     switch(e.code) {
       case '42501':
         return {
@@ -34,6 +35,24 @@ query_util = {
           payload: {
             error_code: 'E004',
             message: 'E004: Resource does not exist'
+          }
+        }
+
+      case '23514':
+        return {
+          code: 400,
+          payload: {
+            error_code: 'E006',
+            message: `E006: Failed to insert due to violating the constraint '${e.constraint}' of table '${e.table}'.`
+          }
+        }
+
+      case '23P01':
+        return {
+          code: 400,
+          payload: {
+            error_code: 'E006',
+            message: `E006: Failed to insert due to violating the constraint '${e.constraint}' of table '${e.table}'.`
           }
         }
 

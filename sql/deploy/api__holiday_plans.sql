@@ -42,6 +42,7 @@ BEGIN;
       DECLARE
         result JSONB;
       BEGIN
+        -- TODO: Fix duplicate events
         SELECT
           json_build_object
             ( 'name'
@@ -185,27 +186,46 @@ BEGIN;
     , in_end_date TIMESTAMP
     )
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      INSERT
-        INTO app.events (plan_id, name, start_date, end_date, user_id)
-        SELECT plan_id, $2, $3, $4, app.current_user_id()
-          FROM app.plans
-          WHERE plans.plan_id = $1
-            AND plans.date = $3 :: DATE
-        RETURNING
-          json_build_object
-            ( 'id'
-            , event_id
-            , 'plan_id'
-            , plan_id
-            , 'start_time'
-            , start_date
-            , 'end_time'
-            , end_date
-            , 'user_id'
-            , user_id
-            );
+      DECLARE
+        same_date BOOLEAN;
+        result JSONB;
+      BEGIN
+        SELECT exists(
+          SELECT *
+            FROM app.plans
+            WHERE plans.plan_id = $1
+              AND plans.date = $3 :: DATE
+              AND plans.date = $4 :: DATE
+        )
+          INTO same_date;
+
+        IF NOT same_date THEN
+          RAISE 'Resource does not exist: %',
+              in_plan_id USING ERRCODE = 'no_data_found';
+        END IF;
+
+        INSERT
+          INTO app.events (plan_id, name, start_date, end_date, user_id)
+          VALUES ($1, $2, $3, $4, app.current_user_id())
+          RETURNING
+            json_build_object
+              ( 'id'
+              , event_id
+              , 'plan_id'
+              , plan_id
+              , 'start_time'
+              , start_date
+              , 'end_time'
+              , end_date
+              , 'user_id'
+              , user_id
+              )
+          INTO result;
+
+        RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.create_event TO hp_user;
@@ -217,48 +237,74 @@ BEGIN;
     , end_date TIMESTAMP
     )
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      UPDATE app.events
-        SET name = $2
-          , start_date = $3
-          , end_date = $4
-        WHERE events.event_id = $1
-        RETURNING
-          json_build_object
-            ( 'id'
-            , event_id
-            , 'plan_id'
-            , plan_id
-            , 'start_time'
-            , start_date
-            , 'end_time'
-            , end_date
-            );
+      DECLARE
+        result JSONB;
+      BEGIN
+        UPDATE app.events
+          SET name = $2
+            , start_date = $3
+            , end_date = $4
+          WHERE events.event_id = $1
+          RETURNING
+            json_build_object
+              ( 'id'
+              , events.event_id
+              , 'plan_id'
+              , events.plan_id
+              , 'start_time'
+              , events.start_date
+              , 'end_time'
+              , events.end_date
+              )
+          INTO result;
+
+        IF result IS NULL THEN
+          RAISE
+            'Resource does not exist: %',
+            event_id USING ERRCODE = 'no_data_found';
+        END IF;
+
+        RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.edit_event TO hp_user;
 
   CREATE OR REPLACE FUNCTION api.delete_event(event_id UUID)
     RETURNS JSONB
-    LANGUAGE SQL
+    LANGUAGE PLPGSQL
     AS $$
-      DELETE
-        FROM app.events
-        WHERE event_id = $1
-        RETURNING
-          json_build_object
-            ( 'id'
-            , event_id
-            , 'plan_id'
-            , plan_id
-            , 'name'
-            , name
-            , 'start_time'
-            , start_date
-            , 'end_time'
-            , end_date
-            )
+      DECLARE
+        result JSONB;
+      BEGIN
+        DELETE
+          FROM app.events
+          WHERE events.event_id = $1
+          RETURNING
+            json_build_object
+              ( 'id'
+              , events.event_id
+              , 'plan_id'
+              , events.plan_id
+              , 'name'
+              , events.name
+              , 'start_time'
+              , events.start_date
+              , 'end_time'
+              , events.end_date
+              )
+          INTO result;
+
+        IF result IS NULL THEN
+          RAISE
+            'Resource does not exist: %',
+              event_id USING ERRCODE = 'no_data_found';
+        END IF;
+
+        RETURN result;
+      END;
     $$;
 
   GRANT EXECUTE ON FUNCTION api.delete_event TO hp_user;
