@@ -8,16 +8,25 @@ BEGIN;
   -- Plan-related functions
 
   CREATE OR REPLACE FUNCTION api.create_plan
-    ( in_name TEXT
+    ( in_name        TEXT
     , in_description TEXT
-    , in_plan_date DATE
+    , in_plan_date   DATE
+    , in_holiday_id  TEXT
+    , in_country     TEXT
     )
     RETURNS JSONB
     LANGUAGE SQL
     AS $$
       INSERT
-        INTO app.plans (name, description, date, user_id)
-        VALUES ($1, $2, $3, app.current_user_id())
+        INTO app.plans (name, description, date, user_id, holiday_id, country)
+        VALUES
+          ( $1
+          , $2
+          , $3
+          , app.current_user_id()
+          , in_holiday_id
+          , in_country
+          )
         RETURNING
           json_build_object
             ( 'id'
@@ -30,6 +39,10 @@ BEGIN;
             , date
             , 'user_id'
             , user_id
+            , 'holiday_id'
+            , holiday_id
+            , 'country'
+            , country
             );
     $$;
 
@@ -60,9 +73,15 @@ BEGIN;
             , 'id'
             , plans.plan_id
             , 'events'
-            , events_cte.events
+            , coalesce(events_cte.events, '[]'::JSONB)
             , 'comments'
-            , comments_cte.comments
+            , coalesce(comments_cte.comments, '[]'::JSONB)
+            , 'country'
+            , plans.country
+            , 'holiday_id'
+            , plans.holiday_id
+            , 'date'
+            , plans.date
             )
           INTO result
           FROM app.plans, events_cte, comments_cte

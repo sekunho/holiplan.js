@@ -8,7 +8,9 @@ BEGIN;
     user_id     BIGINT REFERENCES app.users ON DELETE CASCADE,
     name        TEXT NOT NULL,
     description TEXT NOT NULL,
-    date        DATE NOT NULL
+    date        DATE NOT NULL,
+    holiday_id  TEXT NOT NULL,
+    country     TEXT NOT NULL
   );
 
   CREATE INDEX plan_user_index ON app.plans(user_id);

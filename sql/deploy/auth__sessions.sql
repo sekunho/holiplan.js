@@ -24,13 +24,13 @@ BEGIN;
         session_user_id BIGINT;
         session_role TEXT;
       BEGIN
-        SELECT current_setting('claims.user_id', true)
-          INTO session_user_id;
-
         -- If there's a user ID in claims, then it's assumed that the person
         -- is logged in. So, we set the role (only for the lifetime of the
         -- transaction) as `hp_user`. Otherwise if it doesn't exist, then it is
         -- assumed to be an anonymous user.
+        SELECT current_setting('claims.user_id', true)
+          INTO session_user_id;
+
         IF session_user_id IS NOT NULL THEN
           SET LOCAL ROLE hp_user;
 

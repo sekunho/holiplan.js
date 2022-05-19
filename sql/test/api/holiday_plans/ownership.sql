@@ -6,9 +6,9 @@ BEGIN;
   SELECT function_owner_is(
     'api',
     'create_plan',
-    ARRAY['text', 'text', 'date'],
+    ARRAY['text', 'text', 'date', 'text', 'text'],
     'hp_api',
-    'hp_api owns the function create_plan/3'
+    'hp_api owns the function create_plan/5'
   );
 
   SELECT function_owner_is(

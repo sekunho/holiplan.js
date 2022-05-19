@@ -16,9 +16,17 @@ router.post('/login', async function(req, res, next) {
   }
 });
 
-router.post('/register', function(req, res, next) {
-  console.log(JSON.stringify(req.body));
-  res.send('respond with a resource');
+router.post('/register', async function(req, res, next) {
+  const pool = req.app.get('db');
+  const json = await user.register(pool, req.body.username, req.body.password);
+
+  if (json.code == 200) {
+    res
+      .cookie('token', json.payload, { httpOnly: true })
+      .sendStatus(json.code);
+  } else {
+    res.sendStatus(json.code);
+  }
 });
 
 router.get('/logout', function(req, res, next) {

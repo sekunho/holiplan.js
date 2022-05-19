@@ -7,10 +7,10 @@ BEGIN;
   SELECT function_privs_are(
     'api',
     'create_plan',
-    ARRAY['text', 'text', 'date'],
+    ARRAY['text', 'text', 'date', 'text', 'text'],
     'hp_user',
     ARRAY['EXECUTE'],
-    'hp_user should be able to execute create_plan/3'
+    'hp_user should be able to execute create_plan/5'
   );
 
   SELECT function_privs_are(
@@ -82,10 +82,10 @@ BEGIN;
   SELECT function_privs_are(
     'api',
     'create_plan',
-    ARRAY['text', 'text', 'date'],
+    ARRAY['text', 'text', 'date', 'text', 'text'],
     'hp_anon',
     '{}',
-    'hp_anon should not be able to execute create_plan/3'
+    'hp_anon should not be able to execute create_plan/5'
   );
 
   SELECT function_privs_are(

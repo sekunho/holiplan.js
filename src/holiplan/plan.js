@@ -1,5 +1,6 @@
 const db = require('../db');
 const { parse_error } = require('./query_util');
+const holidapi = require('../holidapi');
 
 plan = {
   list_plans: async (pool, user_id) => {
@@ -25,21 +26,53 @@ plan = {
         [plan_id]
       );
 
-      return {code: 200, payload: res.rows[0].get_plan_details};
+      let plan = res.rows[0].get_plan_details;
+
+      const holiday = await holidapi.list_holidays(
+        plan.country,
+        {start: plan.date, end: plan.date}
+      );
+
+      plan = {...plan, holiday: holiday.data.data[0]};
+
+      return {code: 200, payload: plan};
     } catch (e) {
       return parse_error(e);
     }
   },
   create_plan: async (pool, user_id, plan) => {
     try {
-      const res = await db.authenticate_query(
-        pool,
-        user_id,
-        'SELECT * FROM api.create_plan($1, $2, $3)',
-        [plan.name, plan.description, plan.date]
+      const is_valid_holiday = await holidapi.is_valid_holiday(
+        plan.country,
+        plan.date,
+        plan.holiday_id
       );
 
-      return {code: 201, payload: res.rows[0].create_plan};
+      if (is_valid_holiday == true) {
+        console.log('valid!');
+        const res = await db.authenticate_query(
+          pool,
+          user_id,
+          'SELECT * FROM api.create_plan($1, $2, $3, $4, $5)',
+          [
+            plan.name,
+            plan.description,
+            plan.date,
+            plan.holiday_id,
+            plan.country
+          ]
+        );
+
+        return {code: 201, payload: res.rows[0].create_plan};
+      } else {
+        return {
+          code: 400,
+          payload: {
+            error_code: 'E007',
+            message: 'E007: The holiday does not fall on this date'
+          }
+        }
+      }
     } catch (e) {
       return parse_error(e);
     }
@@ -158,7 +191,6 @@ plan = {
       return parse_error(e);
     }
   },
-
 };
 
 module.exports = plan;
