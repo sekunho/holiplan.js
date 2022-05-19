@@ -7,9 +7,13 @@ const http = axios.create({
 
 holidapi = {
   list_countries: async () => {
-    const res = await http.get('/countries');
+    try {
+      const res = await http.get('/countries');
 
-    console.log(res.data.data);
+      return res;
+    } catch (e) {
+      throw e;
+    }
   },
   list_holidays: async (country, date_range) => {
     try {
